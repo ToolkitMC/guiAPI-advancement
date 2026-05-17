@@ -1,0 +1,71 @@
+name: Build
+
+on:
+  push:
+    branches: [ main ]
+    tags:     [ 'v*.*.*' ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: 21
+          cache: gradle
+
+      # guiAPI must be available in local Maven before we can compile against it.
+      # Clone the parent repo, build it, and publish to ~/.m2.
+      - name: Publish guiAPI to mavenLocal
+        run: |
+          git clone --depth 1 https://github.com/ToolkitMC/guiAPI.git /tmp/guiAPI
+          cd /tmp/guiAPI
+          ./gradlew publishToMavenLocal --no-daemon
+
+      - name: Build
+        run: ./gradlew build --no-daemon
+
+      - name: Upload JAR
+        uses: actions/upload-artifact@v6
+        with:
+          name: guiapi-advancement-${{ github.sha }}
+          path: build/libs/*.jar
+          if-no-files-found: error
+
+  release:
+    needs: build
+    if: startsWith(github.ref, 'refs/tags/v')
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: write
+
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: 21
+          cache: gradle
+
+      - name: Publish guiAPI to mavenLocal
+        run: |
+          git clone --depth 1 https://github.com/ToolkitMC/guiAPI.git /tmp/guiAPI
+          cd /tmp/guiAPI
+          ./gradlew publishToMavenLocal --no-daemon
+
+      - name: Build release JAR
+        run: ./gradlew build --no-daemon
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: build/libs/*.jar
+          generate_release_notes: true
