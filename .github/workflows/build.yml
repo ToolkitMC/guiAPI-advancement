@@ -3,7 +3,7 @@ name: Build
 on:
   push:
     branches: [ main ]
-    tags:     [ 'v*.*.*' ]
+    tags: [ 'v*.*.*' ]
   pull_request:
     branches: [ main ]
 
@@ -14,18 +14,21 @@ jobs:
     steps:
       - uses: actions/checkout@v6
 
+      - name: Grant Gradle permission
+        run: chmod +x gradlew
+
       - uses: actions/setup-java@v5
         with:
           distribution: temurin
           java-version: 21
           cache: gradle
 
-      # guiAPI must be available in local Maven before we can compile against it.
-      # Clone the parent repo, build it, and publish to ~/.m2.
+      # guiAPI must exist in local Maven
       - name: Publish guiAPI to mavenLocal
         run: |
           git clone --depth 1 https://github.com/ToolkitMC/guiAPI.git /tmp/guiAPI
           cd /tmp/guiAPI
+          chmod +x gradlew
           ./gradlew publishToMavenLocal --no-daemon
 
       - name: Build
@@ -49,6 +52,9 @@ jobs:
     steps:
       - uses: actions/checkout@v6
 
+      - name: Grant Gradle permission
+        run: chmod +x gradlew
+
       - uses: actions/setup-java@v5
         with:
           distribution: temurin
@@ -59,6 +65,7 @@ jobs:
         run: |
           git clone --depth 1 https://github.com/ToolkitMC/guiAPI.git /tmp/guiAPI
           cd /tmp/guiAPI
+          chmod +x gradlew
           ./gradlew publishToMavenLocal --no-daemon
 
       - name: Build release JAR
