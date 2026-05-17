@@ -1,0 +1,11 @@
+{
+  "required": true,
+  "package": "dev.toolkitmc.guiapi.advancement.mixin",
+  "compatibilityLevel": "JAVA_21",
+  "mixins": [
+    "PlayerAdvancementTrackerMixin"
+  ],
+  "injectors": {
+    "defaultRequire": 1
+  }
+}

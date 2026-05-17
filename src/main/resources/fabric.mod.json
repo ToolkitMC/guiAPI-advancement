@@ -2,20 +2,22 @@
   "schemaVersion": 1,
   "id": "guiapi-advancement",
   "version": "${version}",
-  "name": "GUI API — Advancement",
+  "name": "GUI API \u2014 Advancement",
   "description": "Opens a GUI API screen when a player earns a specified advancement. Trigger mappings are defined in datapack JSON under data/<ns>/advancement/*.json.",
   "authors": [
     {
       "name": "ToolkitMC",
-      "contact": { "sources": "https://github.com/ToolkitMC" }
+      "contact": {
+        "sources": "https://github.com/ToolkitMC"
+      }
     }
   ],
   "contact": {
-    "issues":  "https://github.com/ToolkitMC/guiAPI-advancement/issues",
+    "issues": "https://github.com/ToolkitMC/guiAPI-advancement/issues",
     "sources": "https://github.com/ToolkitMC/guiAPI-advancement"
   },
   "license": "MIT",
-  "icon":    "icon.png",
+  "icon": "icon.png",
   "environment": "*",
   "entrypoints": {
     "main": [
@@ -24,29 +26,36 @@
   },
   "depends": {
     "fabricloader": ">=0.16.5",
-    "fabric-api":   "*",
-    "minecraft":    "~1.21.1",
-    "java":         ">=21",
-    "guiapi":       "*"
+    "fabric-api": "*",
+    "minecraft": "~1.21.1",
+    "java": ">=21",
+    "guiapi": "*"
   },
   "suggests": {
     "modmenu": "*"
   },
   "custom": {
     "modmenu": {
-      "badges": [ "library" ],
+      "badges": [
+        "library"
+      ],
       "links": {
         "modmenu.sources": "https://github.com/ToolkitMC/guiAPI-advancement",
-        "modmenu.issues":  "https://github.com/ToolkitMC/guiAPI-advancement/issues"
+        "modmenu.issues": "https://github.com/ToolkitMC/guiAPI-advancement/issues"
       },
       "parent": {
-        "id":          "guiapi",
-        "name":        "GUI API",
+        "id": "guiapi",
+        "name": "GUI API",
         "description": "Datapack-driven chest GUI system for Minecraft 1.21.1.",
-        "icon":        "assets/guiapi/icon.png",
-        "badges":      [ "library" ]
+        "icon": "assets/guiapi/icon.png",
+        "badges": [
+          "library"
+        ]
       },
       "update_checker": true
     }
-  }
+  },
+  "mixins": [
+    "guiapi-advancement.mixins.json"
+  ]
 }
