@@ -4,6 +4,7 @@ on:
   push:
     branches: [ main ]
     tags: [ 'v*.*.*' ]
+
   pull_request:
     branches: [ main ]
 
@@ -21,9 +22,6 @@ jobs:
       - name: Validate Gradle Wrapper
         uses: gradle/actions/wrapper-validation@v6
 
-      - name: Grant Gradle permission
-        run: chmod +x gradlew
-
       - name: Setup Java
         uses: actions/setup-java@v5
         with:
@@ -31,10 +29,14 @@ jobs:
           java-version: 21
           cache: gradle
 
-      # Build and publish guiAPI into local Maven repository
+      - name: Grant Gradle permission
+        run: chmod +x gradlew
+
+      # Clone and publish guiAPI into ~/.m2
       - name: Publish guiAPI to mavenLocal
         run: |
           git clone --depth 1 https://github.com/ToolkitMC/guiAPI.git /tmp/guiAPI
+
           cd /tmp/guiAPI
 
           chmod +x gradlew
@@ -46,18 +48,13 @@ jobs:
             --info \
             --no-daemon
 
-      # Debug local Maven content
+      # Debug generated Maven artifacts
       - name: Debug local Maven
         run: |
-          echo "=== Local Maven Content ==="
-          find ~/.m2/repository/dev/toolkitmc -type f || true
+          echo "=== FULL .m2 CONTENT ==="
+          find ~/.m2 -type f || true
 
-      # Ensure dependency really exists
-      - name: Verify guiAPI artifact
-        run: |
-          test -f ~/.m2/repository/dev/toolkitmc/guiapi/1.0.2/guiapi-1.0.2.pom
-          test -f ~/.m2/repository/dev/toolkitmc/guiapi/1.0.2/guiapi-1.0.2.jar
-
+      # Build current project
       - name: Build
         run: |
           ./gradlew \
@@ -88,7 +85,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v6
 
-      - name: Download build artifact
+      - name: Download built artifact
         uses: actions/download-artifact@v6
         with:
           name: guiapi-advancement-${{ github.sha }}
