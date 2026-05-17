@@ -7,32 +7,65 @@ on:
   pull_request:
     branches: [ main ]
 
+permissions:
+  contents: read
+
 jobs:
   build:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v6
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Validate Gradle Wrapper
+        uses: gradle/actions/wrapper-validation@v6
 
       - name: Grant Gradle permission
         run: chmod +x gradlew
 
-      - uses: actions/setup-java@v5
+      - name: Setup Java
+        uses: actions/setup-java@v5
         with:
           distribution: temurin
           java-version: 21
           cache: gradle
 
-      # guiAPI must exist in local Maven
+      # Build and publish guiAPI into local Maven repository
       - name: Publish guiAPI to mavenLocal
         run: |
           git clone --depth 1 https://github.com/ToolkitMC/guiAPI.git /tmp/guiAPI
           cd /tmp/guiAPI
+
           chmod +x gradlew
-          ./gradlew publishToMavenLocal --no-daemon
+
+          ./gradlew \
+            clean \
+            publishToMavenLocal \
+            --stacktrace \
+            --info \
+            --no-daemon
+
+      # Debug local Maven content
+      - name: Debug local Maven
+        run: |
+          echo "=== Local Maven Content ==="
+          find ~/.m2/repository/dev/toolkitmc -type f || true
+
+      # Ensure dependency really exists
+      - name: Verify guiAPI artifact
+        run: |
+          test -f ~/.m2/repository/dev/toolkitmc/guiapi/1.0.2/guiapi-1.0.2.pom
+          test -f ~/.m2/repository/dev/toolkitmc/guiapi/1.0.2/guiapi-1.0.2.jar
 
       - name: Build
-        run: ./gradlew build --no-daemon
+        run: |
+          ./gradlew \
+            clean \
+            build \
+            --stacktrace \
+            --info \
+            --no-daemon
 
       - name: Upload JAR
         uses: actions/upload-artifact@v6
@@ -43,36 +76,26 @@ jobs:
 
   release:
     needs: build
+
     if: startsWith(github.ref, 'refs/tags/v')
+
     runs-on: ubuntu-latest
 
     permissions:
       contents: write
 
     steps:
-      - uses: actions/checkout@v6
+      - name: Checkout
+        uses: actions/checkout@v6
 
-      - name: Grant Gradle permission
-        run: chmod +x gradlew
-
-      - uses: actions/setup-java@v5
+      - name: Download build artifact
+        uses: actions/download-artifact@v6
         with:
-          distribution: temurin
-          java-version: 21
-          cache: gradle
-
-      - name: Publish guiAPI to mavenLocal
-        run: |
-          git clone --depth 1 https://github.com/ToolkitMC/guiAPI.git /tmp/guiAPI
-          cd /tmp/guiAPI
-          chmod +x gradlew
-          ./gradlew publishToMavenLocal --no-daemon
-
-      - name: Build release JAR
-        run: ./gradlew build --no-daemon
+          name: guiapi-advancement-${{ github.sha }}
+          path: release-jars
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
-          files: build/libs/*.jar
+          files: release-jars/*.jar
           generate_release_notes: true
